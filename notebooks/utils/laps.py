@@ -207,6 +207,15 @@ def extract_data_from_session(laps):
     return results_df
 
 def create_ran_flags(practice_statistics):
+    """
+    Creates ran flags for each compound
+
+    Args:
+        practice_statistics (pandas.DataFrame): DataFrame containing practice statistics
+
+    Returns:
+        pandas.DataFrame: DataFrame containing practice statistics with ran flags
+    """
     compounds = set()
     for col in practice_statistics.columns:
         if col.startswith('laps_'):
@@ -225,6 +234,15 @@ def create_ran_flags(practice_statistics):
     return practice_statistics
 
 def fill_not_ran_nan(practice_statistics):
+    """
+    Fills NaN values with 0 for columns that are not ran
+
+    Args:
+        practice_statistics (pandas.DataFrame): DataFrame containing practice statistics
+
+    Returns:
+        pandas.DataFrame: DataFrame containing practice statistics with NaN values filled with 0
+    """
     # Get all columns beginning with ran_
     ran_cols = [col for col in practice_statistics.columns if col.startswith('ran_')]
 
@@ -239,6 +257,18 @@ def fill_not_ran_nan(practice_statistics):
                     practice_statistics.loc[index, col] = 0
 
     return practice_statistics
+
+def get_overall_statistics(practice_statistics):
+    """Calculate overall statistics, maxs, mins, averages, ranges, etc. to calculate differences to be applied to the overall dataframe
+    
+    Args:
+        practice_statistics (pandas.DataFrame): DataFrame containing practice statistics
+
+    Returns:
+        dict: Dictionary containing overall statistics
+    """
+    
+    pass
 
 if __name__ == '__main__':
     practice_1_test_session_key = '7765'
