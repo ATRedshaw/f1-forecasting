@@ -79,6 +79,19 @@ def practice_session_combined_data(session_key):
 
     return combined_data
 
+def combine_all_practices(practice_sessions):
+    """
+    Combines all practice sessions into a single json object
+    """
+    combined_data = []
+    for session in practice_sessions:
+        combined_data.extend(session)
+
+    # Drop all rows where 'is_pit_out_lap' is True
+    combined_data = [lap for lap in combined_data if lap['is_pit_out_lap'] == False]
+
+    return combined_data
+
 def extract_data_from_session(laps):
     """
     Extracts key metrics for each driver from session lap data
@@ -158,7 +171,7 @@ def extract_data_from_session(laps):
                 metrics[f'fastest_lap_{compound}'] = sum([fastest_compound_lap['duration_sector_1'],
                                                         fastest_compound_lap['duration_sector_2'],
                                                         fastest_compound_lap['duration_sector_3']])
-                metrics[f'fastest_lap_{compound}_tyre_age'] = fastest_compound_lap['tyre_age_at_start']
+                metrics[f'fastest_lap_tyre_age_{compound}'] = fastest_compound_lap['tyre_age_at_start']
                 
                 # Calculate average lap time for compound
                 compound_lap_times = [sum([lap['duration_sector_1'], lap['duration_sector_2'], lap['duration_sector_3']]) 
@@ -169,6 +182,12 @@ def extract_data_from_session(laps):
             metrics[f'best_s1_{compound}'] = min((lap['duration_sector_1'] for lap in compound_laps if lap['duration_sector_1'] is not None), default=None)
             metrics[f'best_s2_{compound}'] = min((lap['duration_sector_2'] for lap in compound_laps if lap['duration_sector_2'] is not None), default=None) 
             metrics[f'best_s3_{compound}'] = min((lap['duration_sector_3'] for lap in compound_laps if lap['duration_sector_3'] is not None), default=None)
+            
+            # Calculate theoretical best for compound
+            if all(x is not None for x in [metrics[f'best_s1_{compound}'], metrics[f'best_s2_{compound}'], metrics[f'best_s3_{compound}']]): 
+                metrics[f'theoretical_best_{compound}'] = metrics[f'best_s1_{compound}'] + metrics[f'best_s2_{compound}'] + metrics[f'best_s3_{compound}']
+            else:
+                metrics[f'theoretical_best_{compound}'] = None
             
             # Average sectors on compound
             valid_s1 = [lap['duration_sector_1'] for lap in compound_laps if lap['duration_sector_1'] is not None]
@@ -182,9 +201,57 @@ def extract_data_from_session(laps):
             metrics[f'laps_{compound}'] = len(compound_laps)
             
         results.append(metrics)
+
+    results_df = pd.DataFrame(results)
         
-    return pd.DataFrame(results)
+    return results_df
+
+def create_ran_flags(practice_statistics):
+    compounds = set()
+    for col in practice_statistics.columns:
+        if col.startswith('laps_'):
+            compounds.add(col.replace('laps_', ''))
+
+    for compound in compounds:
+        compound_cols = [col for col in practice_statistics.columns if col.endswith(f'_{compound}')]
+        
+        # For each row, check if all values in compound_cols are NaN
+        for index, row in practice_statistics.iterrows():
+            if row[compound_cols].isna().all():
+                practice_statistics.loc[index, f'ran_{compound}'] = False
+            else:
+                practice_statistics.loc[index, f'ran_{compound}'] = True
+
+    return practice_statistics
+
+def fill_not_ran_nan(practice_statistics):
+    # Get all columns beginning with ran_
+    ran_cols = [col for col in practice_statistics.columns if col.startswith('ran_')]
+
+    for col in ran_cols:
+        compound = col.replace('ran_', '')
+        compound_cols = [col for col in practice_statistics.columns if col.endswith(f'_{compound}') and not col.startswith('ran_')]
+
+        # For each row, if the compound_cols are all NaN, set the relevant compound columns for that row to 0
+        for index, row in practice_statistics.iterrows():
+            if row[compound_cols].isna().all():
+                for col in compound_cols:
+                    practice_statistics.loc[index, col] = 0
+
+    return practice_statistics
+
 if __name__ == '__main__':
     practice_1_test_session_key = '7765'
+    practice_2_test_session_key = '7766'
+    practice_3_test_session_key = '7767'
+
     p1_lap_data = practice_session_combined_data(practice_1_test_session_key)
-    print(extract_data_from_session(p1_lap_data))
+    p2_lap_data = practice_session_combined_data(practice_2_test_session_key)
+    p3_lap_data = practice_session_combined_data(practice_3_test_session_key)
+
+    combined_practice_data = combine_all_practices([p1_lap_data, p2_lap_data, p3_lap_data])
+    practice_statistics = extract_data_from_session(combined_practice_data)
+    practice_statistics = create_ran_flags(practice_statistics)
+    practice_statistics = fill_not_ran_nan(practice_statistics)
+
+    print(practice_statistics)
