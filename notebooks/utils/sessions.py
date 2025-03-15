@@ -54,5 +54,23 @@ def get_all_race_weekends():
 
     return ordered_weekends
 
+def get_weekend_session_keys(weekend, session_type):
+    """
+    Gets the session keys for a given weekend and session type
+
+    Args:
+        weekend (dict): Weekend data dictionary containing session information
+        session_type (str): Type of session to get keys for (e.g. 'Practice', 'Race')
+
+    Returns:
+        list: List of session keys for the specified session type
+    """
+    return [session['session_key'] for session in weekend['sessions'] 
+            if session is not None and session['session_type'] == session_type]
+
 if __name__ == '__main__':
-    print(get_all_race_weekends())
+    race_weekends = get_all_race_weekends()
+    print('\nFirst race weekend:')
+    print(race_weekends[0])
+    print('\nPractice session keys for the first race weekend:')
+    print(get_weekend_session_keys(race_weekends[0], 'Practice'))

@@ -1,14 +1,41 @@
 import requests
 
 def get_session_lap_data(session_key):
+    """
+    Gets lap data for a session
+
+    Args:
+        session_key (str): The key of the session to get lap data for
+
+    Returns:
+        list: A list of dictionaries containing lap data
+    """
     laps = requests.get(f'https://api.openf1.org/v1/laps?session_key={session_key}')
     return laps.json()
 
 def get_session_stint_data(session_key):
+    """
+    Gets stint data for a session
+
+    Args:
+        session_key (str): The key of the session to get stint data for
+
+    Returns:
+        list: A list of dictionaries containing stint data
+    """
     stints = requests.get(f'https://api.openf1.org/v1/stints?session_key={session_key}')
     return stints.json()
 
-def get_combined_session_data(session_key):
+def practice_session_combined_data(session_key):
+    """
+    Combines lap and stint data for a practice session
+
+    Args:
+        session_key (str): The key of the session to combine data for
+
+    Returns:
+        list: A list of dictionaries containing combined lap and stint data
+    """
     laps = get_session_lap_data(session_key)
     stints = get_session_stint_data(session_key)
     
@@ -49,11 +76,11 @@ def get_combined_session_data(session_key):
 
 if __name__ == '__main__':
     practice_1_test_session_key = '7765'
-    p1_lap_data = get_combined_session_data(practice_1_test_session_key)
+    
+    p1_lap_data = practice_session_combined_data(practice_1_test_session_key)
 
     print(get_session_lap_data(practice_1_test_session_key)[0])
     print(get_session_stint_data(practice_1_test_session_key)[0])
 
     for lap in p1_lap_data:
         print(lap)
-
