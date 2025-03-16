@@ -16,7 +16,7 @@ def get_all_race_weekends():
 
     # Group sessions by meeting_key
     grouped_sessions = defaultdict(dict)
-    session_order = ['Practice 1', 'Practice 2', 'Practice 3', 'Sprint Shootout', 'Sprint', 'Race']
+    session_order = ['Practice 1', 'Practice 2', 'Practice 3', 'Sprint Shootout', 'Sprint', 'Qualifying', 'Race']
     
     for session in sessions:
         meeting_key = session['meeting_key']
