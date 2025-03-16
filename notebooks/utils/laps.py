@@ -248,7 +248,7 @@ def fill_not_ran_nan(practice_statistics):
 
     for col in ran_cols:
         compound = col.replace('ran_', '')
-        compound_cols = [col for col in practice_statistics.columns if col.endswith(f'_{compound}') and not col.startswith('ran_')]
+        compound_cols = [col for col in practice_statistics.columns if compound in col and not col.startswith('ran_')]
 
         # For each row, if the compound_cols are all NaN, set the relevant compound columns for that row to 0
         for index, row in practice_statistics.iterrows():
@@ -258,17 +258,44 @@ def fill_not_ran_nan(practice_statistics):
 
     return practice_statistics
 
-def get_overall_statistics(practice_statistics):
+def add_statistic_differentials_per_event(event_practice_statistics):
     """Calculate overall statistics, maxs, mins, averages, ranges, etc. to calculate differences to be applied to the overall dataframe
     
     Args:
-        practice_statistics (pandas.DataFrame): DataFrame containing practice statistics
+        event_practice_statistics (pandas.DataFrame): DataFrame containing practice statistics
 
     Returns:
-        dict: Dictionary containing overall statistics
+        pandas.DataFrame: DataFrame containing practice statistics with added statistic differentials
     """
-    
-    pass
+    # Get numerical columns programmatically, excluding driver_number
+    numerical_cols = event_practice_statistics.select_dtypes(include=['int64', 'float64']).columns
+    numerical_cols = [col for col in numerical_cols if col != 'driver_number' and 'tyre_age' not in col]
+
+    # Calculate statistics for each numerical column
+    for col in numerical_cols:
+        # Skip columns that are all zeros or NaN
+        if event_practice_statistics[col].sum() == 0 or event_practice_statistics[col].isna().all():
+            continue
+            
+        # Calculate statistics
+        col_median = event_practice_statistics[col].median()
+        col_min = event_practice_statistics[col].min()
+        col_max = event_practice_statistics[col].max()
+        col_mean = event_practice_statistics[col].mean()
+        
+        # Calculate differentials
+        event_practice_statistics[f'{col}_diff_to_event_median'] = event_practice_statistics[col] - col_median
+        event_practice_statistics[f'{col}_diff_to_event_min'] = event_practice_statistics[col] - col_min
+        event_practice_statistics[f'{col}_diff_to_event_max'] = event_practice_statistics[col] - col_max
+        event_practice_statistics[f'{col}_diff_to_event_mean'] = event_practice_statistics[col] - col_mean
+        
+        # Calculate percentage differentials
+        event_practice_statistics[f'{col}_pct_diff_to_event_median'] = (event_practice_statistics[col] - col_median) / col_median * 100
+        event_practice_statistics[f'{col}_pct_diff_to_event_min'] = (event_practice_statistics[col] - col_min) / col_min * 100
+        event_practice_statistics[f'{col}_pct_diff_to_event_max'] = (event_practice_statistics[col] - col_max) / col_max * 100
+        event_practice_statistics[f'{col}_pct_diff_to_event_mean'] = (event_practice_statistics[col] - col_mean) / col_mean * 100
+
+    return event_practice_statistics
 
 if __name__ == '__main__':
     practice_1_test_session_key = '7765'

@@ -45,3 +45,21 @@ def get_weather_by_session_keys(session_keys):
             stats[metric]['median'] = sorted(values)[len(values)//2]
 
     return stats
+
+def add_weather_data_to_event_practice_statistics(event_practice_statistics, weather_stats):
+    """
+    Adds weather data columns to the event practice statistics DataFrame
+
+    Args:
+        event_practice_statistics (pandas.DataFrame): DataFrame containing practice statistics
+        weather_stats (dict): Dictionary containing weather statistics
+
+    Returns:
+        pandas.DataFrame: DataFrame with added weather columns
+    """
+    # Add columns for each weather metric and statistic
+    for metric, stats in weather_stats.items():
+        for stat, value in stats.items():
+            event_practice_statistics[f'{metric}_{stat}'] = value
+            
+    return event_practice_statistics
