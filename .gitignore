@@ -6,3 +6,9 @@ venv/
 
 # Ignore all .pyc files
 *.pyc
+
+# Ignore all logs
+logs/
+
+# Ignore all data
+data/

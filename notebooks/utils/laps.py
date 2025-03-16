@@ -74,8 +74,8 @@ def practice_session_combined_data(session_key):
         }
         combined_data.append(combined_lap)
     
-    # Drop where compound is UNKNOWN
-    combined_data = [lap for lap in combined_data if lap['compound'] != 'UNKNOWN']
+    # Drop where compound has 'UNKNOWN' in the name
+    combined_data = [lap for lap in combined_data if 'UNKNOWN' not in lap['compound']]
 
     # # For now, drop WET and INTERMEDIATE tyres too
     # combined_data = [lap for lap in combined_data if lap['compound'] != 'WET' and lap['compound'] != 'INTERMEDIATE']
@@ -84,7 +84,13 @@ def practice_session_combined_data(session_key):
 
 def combine_all_practices(practice_sessions):
     """
-    Combines all practice sessions into a single json object
+    Combines all event practice sessions into a single json object
+
+    Args:
+        practice_sessions (list): A list of dictionaries containing practice session data
+
+    Returns:
+        list: A list of dictionaries containing combined practice session data
     """
     combined_data = []
     for session in practice_sessions:
