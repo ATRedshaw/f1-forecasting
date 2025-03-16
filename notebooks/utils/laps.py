@@ -77,8 +77,8 @@ def practice_session_combined_data(session_key):
     # Drop where compound is UNKNOWN
     combined_data = [lap for lap in combined_data if lap['compound'] != 'UNKNOWN']
 
-    # For now, drop WET and INTERMEDIATE tyres too
-    combined_data = [lap for lap in combined_data if lap['compound'] != 'WET' and lap['compound'] != 'INTERMEDIATE']
+    # # For now, drop WET and INTERMEDIATE tyres too
+    # combined_data = [lap for lap in combined_data if lap['compound'] != 'WET' and lap['compound'] != 'INTERMEDIATE']
 
     return combined_data
 
