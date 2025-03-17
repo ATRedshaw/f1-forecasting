@@ -47,3 +47,16 @@ def fill_nans_with_zero(practice_statistics):
     practice_statistics = practice_statistics.fillna(0)
     practice_statistics = practice_statistics.reset_index(drop=True)
     return practice_statistics
+
+def dummy_fastest_lap_compound(practice_statistics):
+    """
+    Convert the fastest_lap_compound column to dummy variables
+    """
+    practice_statistics = practice_statistics.copy()
+    # Create dummy variables for the fastest_lap_compound column
+    dummies = pd.get_dummies(practice_statistics['fastest_lap_compound'], prefix='fastest_lap_compound', drop_first=True)
+    # Concatenate the dummy variables with the original dataframe
+    practice_statistics = pd.concat([practice_statistics, dummies], axis=1)
+    # Optionally, drop the original fastest_lap_compound column
+    practice_statistics = practice_statistics.drop(columns=['fastest_lap_compound'])
+    return practice_statistics
