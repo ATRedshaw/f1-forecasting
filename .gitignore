@@ -12,3 +12,6 @@ logs/
 
 # Ignore all data
 data/
+
+# Ignore all models
+models/
