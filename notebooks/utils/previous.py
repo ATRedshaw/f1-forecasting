@@ -82,6 +82,9 @@ def add_previous_n_events(practice_statistics, previous_n_events_df, n_value):
 
     # Add flag for previous appearances before merge
     practice_statistics[f'previous_{n_value}_did_appear'] = practice_statistics['driver_number'].isin(previous_n_events_df['driver_number']).astype(bool)
+
+    # Fill nan for previous_did appear with False
+    practice_statistics[f'previous_{n_value}_did_appear'] = practice_statistics[f'previous_{n_value}_did_appear'].fillna(False)
     
     # Merge the dataframes
     practice_statistics = practice_statistics.merge(previous_n_events_df, on='driver_number', how='left')

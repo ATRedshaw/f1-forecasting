@@ -45,6 +45,12 @@ def fill_nans_with_zero(practice_statistics):
         pd.DataFrame: The practice statistics dataframe with all NaNs filled with 0
     """
     practice_statistics = practice_statistics.fillna(0)
+
+    # If did_appear is in the column name, change the zeros to False
+    for col in practice_statistics.columns:
+        if 'did_appear' in col:
+            practice_statistics.loc[practice_statistics[col] == 0, col] = False
+    
     practice_statistics = practice_statistics.reset_index(drop=True)
     return practice_statistics
 
