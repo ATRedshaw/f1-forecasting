@@ -1,5 +1,6 @@
 import requests
 import pandas as pd
+
 def get_end_positions(session_key):
     # Get position data
     url = f'https://api.openf1.org/v1/position?session_key={session_key}'

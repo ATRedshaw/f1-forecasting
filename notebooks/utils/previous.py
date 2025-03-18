@@ -1,34 +1,72 @@
-import requests
+import json
+import pandas as pd
 
-def find_last_n_meetings(all_events, event_id, n):
-    # Keep only events where testing is not in meeting_name
-    all_events = [event for event in all_events if "testing" not in event["meeting_name"].lower()]
+def retrieve_previous_n_events(position_history, last_n_events=1):
+    qualifying_events = []
+    race_events = []
+    # Directly use last_n_events as an integer
+    event_keys = list(position_history.keys())[-last_n_events:]
+    for event_key in event_keys:
+        if event_key in position_history:
+            qualifying_events.append(position_history[event_key]['qualifying'])
+            race_events.append(position_history[event_key]['race'])
 
-    # Get a unique list of meeting_keys ordered by date_start
-    meeting_keys = sorted(list(set([event["meeting_key"] for event in all_events])))
+    return qualifying_events, race_events
 
-    # Find the index of the given event_id
-    try:
-        event_index = meeting_keys.index(event_id)
-    except ValueError:
-        print(f'Event {event_id} not found')
-        return []
-
-    # Get all the last_events before the given event_id
-    last_n_events = meeting_keys[:event_index]
-
-    try:
-        # Try to select the last n events
-        last_n_events = last_n_events[-n:]
-    except IndexError:
-        # If there are less than n events, return all previous events
-        last_n_events = last_n_events
-
-    return last_n_events
+def aggregate_previous_n_events(qualifying_events, race_events, n_value):
+    # Initialize empty lists to store all positions for each driver
+    all_data = {}
+    
+    # Process each event
+    for i in range(len(qualifying_events)):
+        quali = qualifying_events[i]
+        race = race_events[i]
+        
+        # Create lookup dicts for this event
+        quali_dict = {d['driver']: d['position'] for d in quali}
+        race_dict = {d['driver']: d['position'] for d in race}
+        
+        # Calculate positions gained/lost
+        for driver in quali_dict:
+            if driver not in all_data:
+                all_data[driver] = {
+                    'quali_positions': [],
+                    'race_positions': [],
+                    'positions_gained': []
+                }
+            
+            # Store positions
+            if driver in race_dict:
+                all_data[driver]['quali_positions'].append(quali_dict[driver])
+                all_data[driver]['race_positions'].append(race_dict[driver])
+                all_data[driver]['positions_gained'].append(quali_dict[driver] - race_dict[driver])
+    
+    # Calculate aggregated statistics
+    aggregated_stats = []
+    for driver, data in all_data.items():
+        if len(data['quali_positions']) > 0:
+            stats = {
+                'driver_number': driver,
+                f'previous_{n_value}_quali_min': min(data['quali_positions']),
+                f'previous_{n_value}_quali_max': max(data['quali_positions']),
+                f'previous_{n_value}_quali_avg': sum(data['quali_positions']) / len(data['quali_positions']),
+                f'previous_{n_value}_race_min': min(data['race_positions']),
+                f'previous_{n_value}_race_max': max(data['race_positions']),
+                f'previous_{n_value}_race_avg': sum(data['race_positions']) / len(data['race_positions']),
+                f'previous_{n_value}_positions_gained_min': min(data['positions_gained']),
+                f'previous_{n_value}_positions_gained_max': max(data['positions_gained']),
+                f'previous_{n_value}_positions_gained_avg': sum(data['positions_gained']) / len(data['positions_gained']),
+                f'previous_{n_value}_consistency_quali': max(data['quali_positions']) - min(data['quali_positions']),
+                f'previous_{n_value}_consistency_race': max(data['race_positions']) - min(data['race_positions']),
+                f'previous_{n_value}_n_races': len(data['race_positions'])
+            }
+            aggregated_stats.append(stats)
+            
+    return pd.DataFrame(aggregated_stats)
 
 if __name__ == "__main__":
-    print(f'{find_last_n_meetings(1140, 3)}\n')
-    print(f'{find_last_n_meetings(1141, 3)}\n')
-    print(f'{find_last_n_meetings(1142, 3)}\n')
-    print(f'{find_last_n_meetings(1143, 3)}\n')
-    print(f'{find_last_n_meetings(1207, 3)}\n')
+    position_history = json.load(open('notebooks/data/position_history.json'))
+    previous_n_events = 3
+    qualifying_events, race_events = retrieve_previous_n_events(position_history, previous_n_events)
+    aggregated_stats = aggregate_previous_n_events(qualifying_events, race_events, previous_n_events)
+    print(aggregated_stats)
