@@ -1,8 +1,6 @@
 import requests
 
-def find_last_n_meetings(event_id, n):
-    all_events = requests.get("https://api.openf1.org/v1/meetings").json()
-
+def find_last_n_meetings(all_events, event_id, n):
     # Keep only events where testing is not in meeting_name
     all_events = [event for event in all_events if "testing" not in event["meeting_name"].lower()]
 
