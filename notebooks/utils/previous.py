@@ -76,6 +76,18 @@ def aggregate_previous_n_events(qualifying_events, race_events, n_value):
             
     return pd.DataFrame(aggregated_stats)
 
+def add_previous_n_events(practice_statistics, previous_n_events_df, n_value):
+    if n_value == -1:
+        n_value = "career"
+
+    # Add flag for previous appearances before merge
+    practice_statistics[f'previous_{n_value}_did_appear'] = practice_statistics['driver_number'].isin(previous_n_events_df['driver_number']).astype(bool)
+    
+    # Merge the dataframes
+    practice_statistics = practice_statistics.merge(previous_n_events_df, on='driver_number', how='left')
+
+    return practice_statistics
+
 if __name__ == "__main__":
     position_history = json.load(open('notebooks/data/position_history.json'))
     position_history = []
