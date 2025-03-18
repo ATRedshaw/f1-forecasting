@@ -5,7 +5,16 @@ def retrieve_previous_n_events(position_history, last_n_events=1):
     qualifying_events = []
     race_events = []
     # Directly use last_n_events as an integer
-    event_keys = list(position_history.keys())[-last_n_events:]
+
+    try:
+        # If last_n_events is -1, use all events, otherwise use the last n events
+        if last_n_events == -1:
+            event_keys = list(position_history.keys())
+        else:
+            event_keys = list(position_history.keys())[-last_n_events:]
+    except:
+        return [], []
+    
     for event_key in event_keys:
         if event_key in position_history:
             qualifying_events.append(position_history[event_key]['qualifying'])
@@ -16,6 +25,9 @@ def retrieve_previous_n_events(position_history, last_n_events=1):
 def aggregate_previous_n_events(qualifying_events, race_events, n_value):
     # Initialize empty lists to store all positions for each driver
     all_data = {}
+
+    if n_value == -1:
+        n_value = "career"
     
     # Process each event
     for i in range(len(qualifying_events)):
@@ -66,6 +78,7 @@ def aggregate_previous_n_events(qualifying_events, race_events, n_value):
 
 if __name__ == "__main__":
     position_history = json.load(open('notebooks/data/position_history.json'))
+    position_history = []
     previous_n_events = 3
     qualifying_events, race_events = retrieve_previous_n_events(position_history, previous_n_events)
     aggregated_stats = aggregate_previous_n_events(qualifying_events, race_events, previous_n_events)
